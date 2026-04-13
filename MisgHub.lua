@@ -5,11 +5,11 @@ local Player = game:GetService("Players").LocalPlayer
 local MyHWID = RbxAnalytics:GetClientId()
 local MyUser = Player.Name
 
--- THE LINKS
-local GoogleSheetURL = "https://script.google.com/macros/s/AKfycbxyGpyNSN2TTkglNBUJUYR0RMK_IGK5atqRwnBVvOFjq9wTatO7kLtQTJWr-FbVPO264w/exec"
+-- YOUR LINKS
+local GoogleWebApp = "https://script.google.com/macros/s/AKfycbxyGpyNSN2TTkglNBUJUYR0RMK_IGK5atqRwnBVvOFjq9wTatO7kLtQTJWr-FbVPO264w/exec"
 local GitHubScript = "https://github.com/manuisgod-1231/add-LIST/raw/refs/heads/main/3/1.lua"
 
--- 1. Stealth GUI
+-- 1. Stealth GUI (Only for Access Denied)
 local function showAccessGui()
     local ScreenGui = Instance.new("ScreenGui")
     ScreenGui.Name = "MisgHub_Auth"
@@ -59,15 +59,15 @@ local function showAccessGui()
     end)
 end
 
--- 2. Whitelist Check (Using your Sheet)
+-- 2. Check the Google Sheet (via Web App)
 local function isWhitelisted()
     local success, response = pcall(function()
-        return game:HttpGet(GoogleSheetURL)
+        return game:HttpGet(GoogleWebApp)
     end)
 
     if success then
         local data = HttpService:JSONDecode(response)
-        -- Checks if HWID is in Column A and Column C is "1"
+        -- Checks Column A (HWID) and looks at Column C (Value)
         if data[MyHWID] and (tostring(data[MyHWID]) == "1") then
             return true
         end
@@ -75,11 +75,11 @@ local function isWhitelisted()
     return false
 end
 
--- 3. Execution Logic
+-- 3. Execution
 if isWhitelisted() then
-    -- If allowed, run your GitHub script
+    -- If Column C is 1, run your GitHub script
     loadstring(game:HttpGet(GitHubScript))()
 else
-    -- If not allowed, show the GUI
+    -- If Column C is 0 or HWID not found, show the GUI
     showAccessGui()
 end
