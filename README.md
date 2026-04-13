@@ -1,7 +1,7 @@
 # lua Roblox script
 ### Misg Hub 
 ```bash
-loadstring(game:HttpGet("https://raw.githubusercontent.com/jn5ncjzj7j-byte/Scripts/refs/heads/main/MisgHub.lua"))()
+loadstring(game:HttpGet("https://github.com/manuisgod-1231/add-LIST/raw/refs/heads/main/MisgHub.lua"))()
 ```
 ### Misg Aimbot
 ```bash
