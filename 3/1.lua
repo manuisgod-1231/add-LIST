@@ -8,11 +8,11 @@ if not game:IsLoaded() then
 end
 
 if ZM then
-    loadstring(game:HttpGet("https://raw.githubusercontent.com/jn5ncjzj7j-byte/Scripts/refs/heads/main/main/ZM.lua"))()
+    loadstring(game:HttpGet("https://github.com/manuisgod-1231/add-LIST/raw/refs/heads/main/1/ZM.lua"))()
 elseif NT then
-    loadstring(game:HttpGet("https://raw.githubusercontent.com/jn5ncjzj7j-byte/Scripts/refs/heads/main/main/NT.lua"))()
+    loadstring(game:HttpGet("https://github.com/manuisgod-1231/add-LIST/raw/refs/heads/main/1/NT.lua"))()
 elseif AO then
-    loadstring(game:HttpGet("https://github.com/jn5ncjzj7j-byte/Scripts/raw/refs/heads/main/main/Aquatica_Observatory.lua"))()
+    loadstring(game:HttpGet("https://github.com/manuisgod-1231/add-LIST/raw/refs/heads/main/1/Aquatica_Observatory.lua"))()
 else
     local CoreGui = game:GetService("CoreGui")
     
