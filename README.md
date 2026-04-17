@@ -7,8 +7,3 @@ loadstring(game:HttpGet("https://github.com/manuisgod-1231/add-LIST/raw/refs/hea
 ```bash
 loadstring(game:HttpGet("https://github.com/manuisgod-1231/add-LIST/raw/refs/heads/main/2/Aimbot.lua"))()
 ```
-
-# Javascript
-[MonkeyType Pc](https://github.com/jn5ncjzj7j-byte/Scripts/blob/main/JS/MonkeyTypePC.js)
-
-[MonkeyType Mobile](https://github.com/jn5ncjzj7j-byte/Scripts/blob/main/JS/MonkeyTypeMobile)
