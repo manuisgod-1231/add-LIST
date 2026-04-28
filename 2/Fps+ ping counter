@@ -1,0 +1,147 @@
+local RunService = game:GetService("RunService")
+local Players = game:GetService("Players")
+local UserInputService = game:GetService("UserInputService")
+local Stats = game:GetService("Stats")
+local HttpService = game:GetService("HttpService")
+local CoreGui = game:GetService("CoreGui")
+
+-- 1. SETUP & SAVING LOGIC (With Screen Clamping)
+local SAVE_FILE = "9d5a9534-98f6-49f1-a6c5-438c3a4623e8.json"
+
+local function clampPos(pos)
+    local screen = workspace.CurrentCamera.ViewportSize
+    local x = math.clamp(pos.X.Offset, 0, screen.X - 280)
+    local y = math.clamp(pos.Y.Offset, 0, screen.Y - 70)
+    return UDim2.new(0, x, 0, y)
+end
+
+local function savePos(pos)
+    local data = {x = pos.X.Offset, y = pos.Y.Offset}
+    pcall(function()
+        writefile(SAVE_FILE, HttpService:JSONEncode(data))
+    end)
+end
+
+local function loadPos()
+    local success, content = pcall(function() return readfile(SAVE_FILE) end)
+    if success and content then
+        local data = HttpService:JSONDecode(content)
+        -- Clamp loaded position so it's never off-screen
+        return clampPos(UDim2.new(0, data.x, 0, data.y))
+    end
+    return UDim2.new(0, 15, 1, -85) -- Default
+end
+
+-- 2. GUI INITIALIZATION
+local sg, mainFrame, pingLabel, fpsLabel
+
+local function CreateGUI()
+    local parentTarget
+    if gethui then parentTarget = gethui() 
+    elseif pcall(function() return CoreGui end) then parentTarget = CoreGui 
+    else parentTarget = Players.LocalPlayer:WaitForChild("PlayerGui") end
+
+    sg = Instance.new("ScreenGui")
+    sg.Name = "Stats_" .. math.random(100, 999)
+    sg.DisplayOrder = 2147483647
+    sg.IgnoreGuiInset = true
+    sg.Parent = parentTarget
+
+    mainFrame = Instance.new("Frame", sg)
+    mainFrame.Size = UDim2.new(0, 280, 0, 70)
+    mainFrame.Position = loadPos()
+    mainFrame.BackgroundTransparency = 1 
+    mainFrame.Active = true -- Critical for input detection
+
+    pingLabel = Instance.new("TextLabel", mainFrame)
+    pingLabel.Size = UDim2.new(1, 0, 0.5, 0)
+    pingLabel.BackgroundTransparency = 1
+    pingLabel.TextColor3 = Color3.new(1, 1, 1)
+    pingLabel.TextStrokeTransparency = 0
+    pingLabel.Font = Enum.Font.Code
+    pingLabel.TextXAlignment = Enum.TextXAlignment.Left
+    pingLabel.TextSize = 20
+
+    fpsLabel = Instance.new("TextLabel", mainFrame)
+    fpsLabel.Position = UDim2.new(0, 0, 0.5, 0)
+    fpsLabel.Size = UDim2.new(1, 0, 0.5, 0)
+    fpsLabel.BackgroundTransparency = 1
+    fpsLabel.TextColor3 = Color3.new(1, 1, 1)
+    fpsLabel.TextStrokeTransparency = 0
+    fpsLabel.Font = Enum.Font.Code
+    fpsLabel.TextXAlignment = Enum.TextXAlignment.Left
+    fpsLabel.TextSize = 20
+end
+
+CreateGUI()
+
+-- 3. UPDATED DRAGGABLE & HOLD LOGIC
+local dragging = false
+local dragStart, startPos
+local isHolding = false
+local holdTime = 0
+
+mainFrame.InputBegan:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+        isHolding = true
+        holdTime = tick()
+    end
+end)
+
+UserInputService.InputEnded:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+        isHolding = false
+        if dragging then
+            dragging = false
+            savePos(mainFrame.Position)
+        end
+    end
+end)
+
+RunService.RenderStepped:Connect(function()
+    -- Check for hold duration
+    if isHolding and not dragging then
+        if (tick() - holdTime) >= 1.5 then
+            dragging = true
+            dragStart = UserInputService:GetMouseLocation()
+            startPos = mainFrame.Position
+        end
+    end
+    
+    -- Movement logic
+    if dragging then
+        local delta = UserInputService:GetMouseLocation() - dragStart
+        local newPos = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
+        mainFrame.Position = clampPos(newPos) -- Keep inside screen while dragging
+    end
+end)
+
+-- 4. FAST STATS LOGIC (0.1s)
+local networkStats = Stats:WaitForChild("Network")
+local dataPing = networkStats:WaitForChild("ServerStatsItem"):WaitForChild("Data Ping")
+local minFps, maxFps, minPing, maxPing = 999, 0, 9999, 0
+local frames, timer = 0, 0
+
+RunService.RenderStepped:Connect(function(dt)
+    frames += 1
+    timer += dt
+    
+    if timer >= 0.1 then
+        local curFps = math.floor(frames / timer)
+        local curPing = math.floor(dataPing:GetValue())
+        
+        if curFps > 0 then
+            minFps = math.min(minFps, curFps)
+            maxFps = math.max(maxFps, curFps)
+        end
+        if curPing > 0 then
+            minPing = math.min(minPing, curPing)
+            maxPing = math.max(maxPing, curPing)
+        end
+        
+        fpsLabel.Text  = string.format("FPS:  %d [↓%d  ↑%d]", curFps, minFps, maxFps)
+        pingLabel.Text = string.format("PING: %d [↓%d  ↑%d]", curPing, minPing, maxPing)
+        
+        frames, timer = 0, 0
+    end
+end)
